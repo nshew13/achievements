@@ -1,72 +1,67 @@
 import {
+    Animation,
+    ArcRotateCamera,
+    Color3,
+    Color4,
     Engine,
-    FreeCamera,
     HemisphericLight,
-    Mesh,
-    Scene,
-    Vector3,
     MeshBuilder,
-} from "@babylonjs/core";
+    PointLight,
+    Scene,
+    SpotLight,
+    UniversalCamera,
+    Vector3,
+} from '@babylonjs/core';
 
-import {
-    GridMaterial
-} from "@babylonjs/materials/grid";
-
-// Required side effects to populate the Create methods on the mesh class. Without this, the bundle would be smaller but the createXXX methods from mesh would not be accessible.
-import "@babylonjs/core/Meshes/meshBuilder";
-
-// Get the canvas element from the DOM.
-const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
+import { BabylonUtils } from './babylon-utils';
+import './achievements.scss';
 
 
-// Associate a Babylon Engine to it.
+const RGBA_YELLOW = new Color4(1, 1, 0, 1);
+const RGB_BLUE    = new Color3(0, 0, 1);
+const RGB_WHITE   = new Color3(1, 1, 1);
+
+const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
 const engine = new Engine(canvas);
+const scene  = new Scene(engine);
 
-// Create our first scene.
-const scene = new Scene(engine);
+// const utils = new BabylonUtils(scene);
+// utils.addWorldAxes(3);
+
+const viewPt = new Vector3(0, 5, 0);
 
 // This creates and positions a free camera (non-mesh)
-const camera = new FreeCamera("camera1", new Vector3(0, 5, -10), scene);
-// This targets the camera to scene origin
-camera.setTarget(Vector3.Zero());
-// This attaches the camera to the canvas
-camera.attachControl(canvas, true);
+// const camera1 = new UniversalCamera('camera1', new Vector3(0, 5, -5), scene);
+// camera1.setTarget(Vector3.Zero());
+const camera2 = new ArcRotateCamera('camera2', 1, 1, 3, Vector3.Zero(), scene);
+camera2.setPosition(viewPt);
+camera2.attachControl(canvas, true);
 
-// // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
-// const light = new HemisphericLight("light1", new Vector3(0, 1, 0), scene);
-// // Default intensity is 1. Let's dim the light a small amount
-// light.intensity = 0.7;
+// const light = new PointLight('light', viewPt, scene);
+const light = new HemisphericLight('HemiLight', new Vector3(0, 1, 0), scene);
+light.diffuse = RGB_WHITE;
+light.specular = RGB_BLUE;
 
-// Create a grid material
-const material = new GridMaterial("grid", scene);
+let coinCyl = MeshBuilder.CreateCylinder('coin', {
+    height: .2,
+    diameter: 2,
+    tessellation: 48,
+    faceColors: [
+        RGBA_YELLOW, // bottom
+        RGBA_YELLOW, // tube
+        RGBA_YELLOW, // top
+    ],
+}, scene);
 
-// // Our built-in 'sphere' shape. Params: name, subdivs, size, scene
-// let sphere = Mesh.CreateSphere("sphere1", 16, 2, scene);
-// // Move the sphere upward 1/2 its height
-// sphere.position.y = 2;
-// // Affect a material
-// sphere.material = material;
-
-// // Our built-in 'ground' shape. Params: name, width, depth, subdivs, scene
-// let ground = Mesh.CreateGround("ground1", 6, 6, 2, scene);
-// // Affect a material
-// ground.material = material;
-
-let coinCyl = MeshBuilder.CreateCylinder('coin', {}, scene);
-
-// let coin = MeshBuilder.ExtrudeShape(
-//     'achievement-medallion',
-//     {
-//         shape: [
-//             new Vector3(0, 0, 0),
-//             new Vector3(1, 0, 0),
-//             new Vector3(1, 1, 0),
-//             new Vector3(0, 1, 0),
-//         ],
-//         depth: 2,
-//     },
-//     scene
-//  );
+// spin the coin
+const coinSpin = new Animation('myAnimation', 'rotation.z', 1, Animation.ANIMATIONTYPE_FLOAT, Animation.ANIMATIONLOOPMODE_CYCLE);
+coinSpin.setKeys([
+    { frame: 0, value: 0 },
+    { frame: 50, value: 180 },
+    { frame: 100, value: 360 },
+]);
+coinCyl.animations = [ coinSpin ];
+scene.beginAnimation(coinCyl, 0, 100, true, .5);
 
 // Render every frame
 engine.runRenderLoop(() => {
