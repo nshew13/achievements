@@ -15,6 +15,10 @@ export class BabylonUtils {
         this._scene = scene;
     }
 
+    public static deg2rad (degrees: number): number {
+        return degrees * Math.PI/180;
+    }
+
     public makeTextPlane (text: string, color: string, size: float): Mesh {
         const dynamicTexture = new DynamicTexture('DynamicTexture', 50, this._scene, true);
         dynamicTexture.hasAlpha = true;
@@ -25,24 +29,40 @@ export class BabylonUtils {
         plane.material.backFaceCulling = false;
         plane.material.specularColor = new Color3(0, 0, 0);
         plane.material.diffuseTexture = dynamicTexture;
-        
+
         return plane;
     }
 
-    // https://doc.babylonjs.com/snippets/world_axes
+    /**
+     * adds rays of length size on each axis
+     *
+     * Adapted from https://doc.babylonjs.com/snippets/world_axes.
+     *
+     * X = red, Y = green, Z = blue
+     *
+     * @param size
+     */
     public addWorldAxes (size: number): void {
+        const XYZ_X_RAY_END = new Vector3(size, 0, 0);
+        const XYZ_Y_RAY_END = new Vector3(0, size, 0);
+        const XYZ_Z_RAY_END = new Vector3(0, 0, size);
+
         Mesh.CreateLines(
             'axisX',
-            [ 
+            [
                 Vector3.Zero(),
-                new Vector3(size, 0, 0),
-                new Vector3(size * 0.95, 0.05 * size, 0), 
-                new Vector3(size, 0, 0),
-                new Vector3(size * 0.95, -0.05 * size, 0)
+                XYZ_X_RAY_END,
+                new Vector3(size * 0.95, 0.05 * size, 0),
+                XYZ_X_RAY_END,
+                new Vector3(size * 0.95, -0.05 * size, 0),
+                XYZ_X_RAY_END,
+                new Vector3(size * 0.95, 0, 0.05 * size),
+                XYZ_X_RAY_END,
+                new Vector3(size * 0.95, 0, -0.05 * size),
             ],
             this._scene
         ).color = new Color3(1, 0, 0);
-        
+
         this.makeTextPlane('X', 'red', size / 10)
             .position = new Vector3(0.9 * size, -0.05 * size, 0);
 
@@ -50,10 +70,14 @@ export class BabylonUtils {
             'axisY',
             [
                 Vector3.Zero(),
-                new Vector3(0, size, 0),
-                new Vector3( -0.05 * size, size * 0.95, 0), 
-                new Vector3(0, size, 0),
-                new Vector3( 0.05 * size, size * 0.95, 0)
+                XYZ_Y_RAY_END,
+                new Vector3( -0.05 * size, size * 0.95, 0),
+                XYZ_Y_RAY_END,
+                new Vector3( 0.05 * size, size * 0.95, 0),
+                XYZ_Y_RAY_END,
+                new Vector3( 0, size * 0.95, 0.05 * size),
+                XYZ_Y_RAY_END,
+                new Vector3( 0, size * 0.95, -0.05 * size),
             ],
             this._scene
         ).color = new Color3(0, 1, 0);
@@ -65,10 +89,14 @@ export class BabylonUtils {
             'axisZ',
             [
                 Vector3.Zero(),
-                new Vector3(0, 0, size),
+                XYZ_Z_RAY_END,
                 new Vector3( 0 , -0.05 * size, size * 0.95),
-                new Vector3(0, 0, size),
-                new Vector3( 0, 0.05 * size, size * 0.95)
+                XYZ_Z_RAY_END,
+                new Vector3( 0, 0.05 * size, size * 0.95),
+                XYZ_Z_RAY_END,
+                new Vector3( 0.05 * size, 0, size * 0.95),
+                XYZ_Z_RAY_END,
+                new Vector3( -0.05 * size, 0, size * 0.95),
             ],
         this._scene
         ).color = new Color3(0, 0, 1);
