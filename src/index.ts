@@ -11,11 +11,14 @@ import {
     SpotLight,
     UniversalCamera,
     Vector3,
+    StandardMaterial,
+    Texture,
+    Vector4,
 } from '@babylonjs/core';
 
 import { BabylonUtils } from './babylon-utils';
 import './achievements.scss';
-
+import coinFacesImg from './coin.png';
 
 const RGBA_YELLOW = new Color4(1, 1, 0, 1);
 const RGB_BLUE    = new Color3(0, 0, 1);
@@ -24,11 +27,12 @@ const RGB_WHITE   = new Color3(1, 1, 1);
 const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
 const engine = new Engine(canvas);
 const scene  = new Scene(engine);
+scene.clearColor = new Color4(0, 0, 0, 0);
 
 // const utils = new BabylonUtils(scene);
 // utils.addWorldAxes(3);
 
-const viewPt = new Vector3(0, 5, 0);
+const viewPt = new Vector3(0, -4, 0);
 
 // This creates and positions a free camera (non-mesh)
 // const camera1 = new UniversalCamera('camera1', new Vector3(0, 5, -5), scene);
@@ -37,10 +41,27 @@ const camera2 = new ArcRotateCamera('camera2', 1, 1, 3, Vector3.Zero(), scene);
 camera2.setPosition(viewPt);
 camera2.attachControl(canvas, true);
 
-// const light = new PointLight('light', viewPt, scene);
-const light = new HemisphericLight('HemiLight', new Vector3(0, 1, 0), scene);
+const light = new HemisphericLight('HemiLight', viewPt, scene);
 light.diffuse = RGB_WHITE;
-light.specular = RGB_BLUE;
+light.specular = RGB_BLUE; // use complementary color for white highlight
+
+const coinFacesMat = new StandardMaterial('coinFaces', scene);
+const coinFacesTexture = new Texture(coinFacesImg, scene);
+coinFacesMat.diffuseTexture = coinFacesTexture;
+// coinFacesMat.diffuseTexture.hasAlpha = true;
+// coinFacesMat.specularTexture = coinFacesTexture;
+// coinFacesMat.specularTexture.hasAlpha = true;
+// coinFacesMat.emissiveTexture = coinFacesTexture;
+// coinFacesMat.emissiveTexture.hasAlpha = true;
+// coinFacesMat.ambientTexture = coinFacesTexture;
+
+const cylFaceUV = new Array(3);
+cylFaceUV[0] = new Vector4(0, 0, .5, 1);
+// cylFaceUV[1] = Vector4.Zero();
+cylFaceUV[2] = new Vector4(.5, 0, 1, 1);
+
+const cylFaceCol = new Array(3);
+cylFaceCol[1] = RGBA_YELLOW;
 
 let coinCyl = MeshBuilder.CreateCylinder('coin', {
     height: .2,
@@ -51,7 +72,9 @@ let coinCyl = MeshBuilder.CreateCylinder('coin', {
         RGBA_YELLOW, // tube
         RGBA_YELLOW, // top
     ],
+    faceUV: cylFaceUV,
 }, scene);
+coinCyl.material = coinFacesMat;
 
 // spin the coin
 const coinSpin = new Animation('myAnimation', 'rotation.z', 1, Animation.ANIMATIONTYPE_FLOAT, Animation.ANIMATIONLOOPMODE_CYCLE);
