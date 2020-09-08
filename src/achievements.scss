@@ -1,4 +1,6 @@
+$size: 600px;
+
 canvas#renderCanvas {
-    height: 1000px;
-    width: 1000px;
+    height: $size;
+    width: $size;
 }
