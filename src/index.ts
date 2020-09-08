@@ -44,7 +44,7 @@ camera2.setPosition(viewPt);
 camera2.attachControl(canvas, true);
 
 const light = new HemisphericLight('HemiLight', viewPt, scene);
-light.diffuse = RGB_RED;
+light.diffuse = RGB_WHITE;
 light.specular = RGB_BLUE; // use complementary color for white highlight
 
 // var alphamodes = [
@@ -55,9 +55,9 @@ light.specular = RGB_BLUE; // use complementary color for white highlight
 //     Engine.ALPHA_MAXIMIZED
 // ];
 
-const coinFacesMat = new StandardMaterial('coinFaces', scene);
-const coinFacesTexture = new Texture(coinFacesImg, scene);
-coinFacesMat.diffuseTexture = coinFacesTexture;
+// const coinFacesMat = new StandardMaterial('coinFaces', scene);
+// const coinFacesTexture = new Texture(coinFacesImg, scene);
+// coinFacesMat.diffuseTexture = coinFacesTexture;
 // coinFacesMat.diffuseTexture.hasAlpha = true;
 // coinFacesMat.wireframe = true;
 // coinFacesMat.alphaMode = alphamodes[1];
@@ -81,12 +81,12 @@ let coinCyl = MeshBuilder.CreateCylinder('coin', {
     diameter: 2,
     tessellation: 48,
     faceUV: cylFaceUV,
-    faceColors: cylFaceCol,
-    // faceColors: [
-    //     RGBA_YELLOW, // bottom
-    //     RGBA_GREEN, // tube
-    //     RGBA_YELLOW, // top
-    // ],
+    // faceColors: cylFaceCol,
+    faceColors: [
+        RGBA_YELLOW, // bottom
+        RGBA_YELLOW, // tube
+        RGBA_YELLOW, // top
+    ],
 }, scene);
 // coinCyl.material = coinFacesMat;
 
