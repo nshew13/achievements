@@ -9,7 +9,7 @@ import {
     MeshBuilder,
     Scene,
     Vector3,
-    EasingFunction,
+    EasingFunction, ExponentialEase, CircleEase,
 } from '@babylonjs/core';
 
 import { BabylonUtils } from './babylon-utils';
@@ -19,7 +19,9 @@ import './achievements.scss';
 const RGBA_YELLOW = new Color4(1, 1, 0, 1);
 const RGB_BLUE    = new Color3(0, 0, 1);
 const RGB_WHITE   = new Color3(1, 1, 1);
+
 const FRAMES = 20;
+const DURATION = 2; // seconds
 
 const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
 const engine = new Engine(canvas);
@@ -67,7 +69,7 @@ let coinCyl = MeshBuilder.CreateCylinder('coin', {
 // coinCyl.material = coinFacesMat;
 
 // create curve for movement of coin up into view
-const appearCurveVectors = Curve3.CreateQuadraticBezier(new Vector3(0, 6, -10), new Vector3(0, 4, 0), Vector3.Zero(), FRAMES);
+const appearCurveVectors = Curve3.CreateQuadraticBezier(new Vector3(0, 6, -10), new Vector3(0, 4, 2), Vector3.Zero(), FRAMES);
 const appearCurvePoints  = appearCurveVectors.getPoints();
 // show curve for debugging
 // Mesh.CreateLines('appearCurve', appearCurvePoints, scene).color = new Color3(0, 1, 0.5);
@@ -78,29 +80,34 @@ for (let i = 0; i < appearCurvePoints.length; i++) { // length should equal FRAM
     appearCurveKeys.push({ frame: i, value: appearCurvePoints[i] });
 }
 // create animation from curve keys
-// 10 fps * 20 frames = 2s
-const animationCoinAppear = new Animation('animPos', 'position', 10, Animation.ANIMATIONTYPE_VECTOR3, Animation.ANIMATIONLOOPMODE_CONSTANT);
+const animationCoinAppear = new Animation('animPos', 'position', FRAMES/DURATION, Animation.ANIMATIONTYPE_VECTOR3, Animation.ANIMATIONLOOPMODE_CONSTANT);
 animationCoinAppear.setKeys(appearCurveKeys);
 // add easing
 const easingOutCubic = new CubicEase();
 easingOutCubic.setEasingMode(EasingFunction.EASINGMODE_EASEOUT);
-animationCoinAppear.setEasingFunction(easingOutCubic);
+const easingOutCirc = new CircleEase();
+easingOutCirc.setEasingMode(EasingFunction.EASINGMODE_EASEOUT);
+animationCoinAppear.setEasingFunction(easingOutCirc);
 
 // spin the coin
-// 4 fps * 20 frames = 4s
-const animationCoinSpin = new Animation('myAnimation', 'rotation.z', 4, Animation.ANIMATIONTYPE_FLOAT, Animation.ANIMATIONLOOPMODE_CONSTANT);
-animationCoinSpin.setKeys([
-    { frame: 0, value: 0 },
-    { frame: 1, value: 180 },
-    { frame: FRAMES, value: 0 },
-]);
+const coinSpinKeys = [];
+for (let i = 0; i < FRAMES; i++) {
+    coinSpinKeys.push({ frame: i, value: BabylonUtils.deg2rad(180*i) });
+}
+// leave it slightly rotated
+// coinSpinKeys[FRAMES-1].value -= BabylonUtils.deg2rad(30);
+
+const animationCoinSpin = new Animation('myAnimation', 'rotation.z', FRAMES/DURATION, Animation.ANIMATIONTYPE_FLOAT, Animation.ANIMATIONLOOPMODE_CONSTANT);
+animationCoinSpin.setKeys(coinSpinKeys);
 // add easing
-animationCoinSpin.setEasingFunction(easingOutCubic);
+const easingOutExpo = new ExponentialEase();
+easingOutExpo.setEasingMode(EasingFunction.EASINGMODE_EASEOUT);
+animationCoinSpin.setEasingFunction(easingOutCirc);
 
 
 coinCyl.animations = [ animationCoinAppear, animationCoinSpin ];
 
-scene.beginAnimation(coinCyl, 0, FRAMES, true, 1);
+scene.beginAnimation(coinCyl, 0, FRAMES, true, .75);
 
 // Render every frame
 engine.runRenderLoop(() => {

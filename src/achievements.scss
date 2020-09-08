@@ -3,4 +3,6 @@ $size: 500px;
 canvas#renderCanvas {
     height: $size;
     width: $size;
+    border: 1px dashed darkgrey;
+    box-shadow: 3px 3px darkgrey;
 }
