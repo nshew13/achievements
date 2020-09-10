@@ -1,36 +1,54 @@
 import {
     Color3,
+    Color4,
     DynamicTexture,
     Mesh,
     StandardMaterial,
     float,
     Scene,
-    Vector3,
+    Vector3, CubicEase, EasingFunction, CircleEase, ExponentialEase,
 } from '@babylonjs/core';
 
 export class BabylonUtils {
     private _scene: Scene;
 
+    // private static _EASE_OUT_CUBIC: EasingFunction;
+    // public static get EASE_OUT_CUBIC () {
+    //     return BabylonUtils._EASE_OUT_CUBIC;
+    // }
+
+    private static _EASE_OUT_CIRC: EasingFunction;
+    public static get EASE_OUT_CIRC () {
+        return BabylonUtils._EASE_OUT_CIRC;
+    }
+
+    // private static _EASE_OUT_EXPO: EasingFunction;
+    // public static get EASE_OUT_EXPO () {
+    //     return BabylonUtils._EASE_OUT_EXPO;
+    // }
+
     public constructor (scene: Scene) {
         this._scene = scene;
+
+        // define easings
+        // BabylonUtils._EASE_OUT_CUBIC = new CubicEase();
+        // BabylonUtils._EASE_OUT_CUBIC.setEasingMode(EasingFunction.EASINGMODE_EASEOUT);
+        BabylonUtils._EASE_OUT_CIRC = new CircleEase();
+        BabylonUtils._EASE_OUT_CIRC.setEasingMode(EasingFunction.EASINGMODE_EASEOUT);
+        // BabylonUtils._EASE_OUT_EXPO = new ExponentialEase();
+        // BabylonUtils._EASE_OUT_EXPO.setEasingMode(EasingFunction.EASINGMODE_EASEOUT);
     }
 
     public static deg2rad (degrees: number): number {
         return degrees * Math.PI/180;
     }
 
-    public makeTextPlane (text: string, color: string, size: float): Mesh {
-        const dynamicTexture = new DynamicTexture('DynamicTexture', 50, this._scene, true);
-        dynamicTexture.hasAlpha = true;
-        dynamicTexture.drawText(text, 5, 40, 'bold 36px Arial', color , 'transparent', true);
-
-        const plane = Mesh.CreatePlane('TextPlane', size, this._scene, true);
-        plane.material = new StandardMaterial('TextPlaneMaterial', this._scene);
-        plane.material.backFaceCulling = false;
-        plane.material.specularColor = new Color3(0, 0, 0);
-        plane.material.diffuseTexture = dynamicTexture;
-
-        return plane;
+    public static getRGBComplement (color: Color3|Color4): Color3 {
+        return new Color3(
+            1 - color.r,
+            1 - color.g,
+            1 - color.b
+        );
     }
 
     /**
@@ -98,10 +116,24 @@ export class BabylonUtils {
                 XYZ_Z_RAY_END,
                 new Vector3( -0.05 * size, 0, size * 0.95),
             ],
-        this._scene
+            this._scene
         ).color = new Color3(0, 0, 1);
 
         this.makeTextPlane('Z', 'blue', size / 10)
             .position = new Vector3(0, 0.05 * size, 0.9 * size);
+    }
+
+    public makeTextPlane (text: string, color: string, size: float): Mesh {
+        const dynamicTexture = new DynamicTexture('DynamicTexture', 50, this._scene, true);
+        dynamicTexture.hasAlpha = true;
+        dynamicTexture.drawText(text, 5, 40, 'bold 36px Arial', color , 'transparent', true);
+
+        const plane = Mesh.CreatePlane('TextPlane', size, this._scene, true);
+        plane.material = new StandardMaterial('TextPlaneMaterial', this._scene);
+        plane.material.backFaceCulling = false;
+        plane.material.specularColor = new Color3(0, 0, 0);
+        plane.material.diffuseTexture = dynamicTexture;
+
+        return plane;
     }
 }
