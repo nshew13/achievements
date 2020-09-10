@@ -1,8 +1,12 @@
 $size: 500px;
 
+body {
+    background-color: royalblue;
+}
+
 canvas#renderCanvas {
     height: $size;
     width: $size;
     border: 1px dashed darkgrey;
-    box-shadow: 3px 3px darkgrey;
+    //box-shadow: 3px 3px darkgrey;
 }

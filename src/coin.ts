@@ -13,17 +13,22 @@ import {
     Scene,
     Texture,
     Vector3,
+    StandardMaterial,
+    Vector4,
 } from '@babylonjs/core';
 
 import { BabylonUtils } from './babylon-utils';
-import sparkImg from './spark-clip-art.png';
+import confettiImg from './flare.png';
+import coinFacesImg from './coin.png';
 
 const RGBA_YELLOW = new Color4(1, 1, 0, 1);
+const RGBA_GREEN  = new Color4(0, 1, 0, 1);
 const RGB_WHITE   = new Color3(1, 1, 1);
 
 export class Coin {
     private static readonly DURATION = 2; // seconds
     private static readonly FRAMES = 20;
+    private static readonly XYZ_START = new Vector3(0, 6, -10);
 
     private _animations: Animation[] = [];
     private _coinCyl: Mesh;
@@ -42,7 +47,8 @@ export class Coin {
         const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
         const engine = new Engine(canvas);
         this._scene  = new Scene(engine);
-        this._scene.clearColor = new Color4(0.5, 0.5, 0.5, 1); // TODO: particles don't show on white/transparent bg
+        // particles don't show on white/transparent bg, but do show on black/transparent (weird)
+        this._scene.clearColor = new Color4(0, 0, 0, 0);
 
         if (this._debug) {
             const utils = new BabylonUtils(this._scene);
@@ -50,13 +56,9 @@ export class Coin {
         }
 
         this.execute = () => {
-            console.log('beginning animations', this._animations);
             this._coinCyl.animations = this._animations;
             this._scene.beginAnimation(this._coinCyl, 0, Coin.FRAMES, true, .75);
 
-            this._particleSystem.start();
-
-            console.log('runRenderLoop', engine);
             engine.runRenderLoop(() => {
                 this._scene.render();
             });
@@ -83,41 +85,40 @@ export class Coin {
         return this;
     }
 
-// const coinFacesMat = new StandardMaterial('coinFaces', this._scene);
-// const coinFacesTexture = new Texture(coinFacesImg, this._scene);
-// coinFacesMat.diffuseTexture = coinFacesTexture;
-// coinFacesMat.diffuseTexture.hasAlpha = true;
-//
-// const cylFaceUV = new Array(3);
-// cylFaceUV[0] = new Vector4(0, 0, .5, 1);
-// cylFaceUV[1] = Vector4.Zero();
-// cylFaceUV[2] = new Vector4(.5, 0, 1, 1);
-//
-// const cylFaceCol = new Array(3);
-// cylFaceCol[0] = RGBA_GREEN;
-// cylFaceCol[1] = RGBA_YELLOW;
-
     public addCoin (): Coin {
+        const coinFacesMat = new StandardMaterial('coinFaces', this._scene);
+        const tex = new Texture(coinFacesImg, this._scene);
+        tex.hasAlpha = true;
+        coinFacesMat.ambientTexture = tex;
+
+        const cylFaceUV = new Array(3);
+        cylFaceUV[0] = new Vector4(0, 0, .5, 1);
+        cylFaceUV[1] = Vector4.Zero();
+        cylFaceUV[2] = new Vector4(.5, 0, 1, 1);
+
         this._coinCyl = MeshBuilder.CreateCylinder('coin', {
             height: .2,
             diameter: 2,
             tessellation: 48,
             // faceUV: cylFaceUV,
-            // faceColors: cylFaceCol,
             faceColors: [
                 RGBA_YELLOW, // bottom
                 RGBA_YELLOW, // tube
                 RGBA_YELLOW, // top
             ],
+            // sideOrientation: Mesh.DOUBLESIDE,
         }, this._scene);
-        // coinCyl.material = coinFacesMat;
+        // have coin off-screen at start of render
+        this._coinCyl.position = Coin.XYZ_START;
+
+        // this._coinCyl.material = coinFacesMat;
 
         return this;
     }
 
     public addCoinMovement (): Coin {
         // create curve for movement of coin up into view
-        const appearCurveVectors = Curve3.CreateQuadraticBezier(new Vector3(0, 6, -10), new Vector3(0, 4, 2), Vector3.Zero(), Coin.FRAMES);
+        const appearCurveVectors = Curve3.CreateQuadraticBezier(Coin.XYZ_START, new Vector3(0, 4, 2), Vector3.Zero(), Coin.FRAMES);
         const appearCurvePoints  = appearCurveVectors.getPoints();
 
         // show curve for debugging
@@ -161,13 +162,17 @@ export class Coin {
     public addConfetti (): Coin {
         // create explosion particles
         this._particleSystem = new ParticleSystem('confettiParticles', 2000, this._scene);
-        this._particleSystem.particleTexture = new Texture(sparkImg, this._scene);
+        this._particleSystem.particleTexture = new Texture(confettiImg, this._scene);
         // this._particleSystem.textureMask = new Color4(0.1, 0.8, 0.8, 1.0);
         const SIZE_EMIT_BOX = 2;
-        this._particleSystem.emitter = new Vector3(0, SIZE_EMIT_BOX, 0); // behind coin at end of travel
+        // this._particleSystem.emitter = new Vector3(0, SIZE_EMIT_BOX, 0); // behind coin at end of travel
+        this._particleSystem.emitter = this._coinCyl;
+        // this._particleSystem.isLocal = true;
+
+
         // this._particleSystem.emitter = Vector3.Zero();
         this._particleSystem.minEmitBox = new Vector3(SIZE_EMIT_BOX, 0 - SIZE_EMIT_BOX, 0 - SIZE_EMIT_BOX); // lower left front
-        this._particleSystem.maxEmitBox = new Vector3(0 - SIZE_EMIT_BOX, SIZE_EMIT_BOX, SIZE_EMIT_BOX); // upper right back
+        this._particleSystem.maxEmitBox = new Vector3(0 - SIZE_EMIT_BOX, 0 - SIZE_EMIT_BOX, SIZE_EMIT_BOX); // upper right back
 
         // this._particleSystem.targetStopDuration = 5000;
         // this._particleSystem.disposeOnStop = true;
@@ -175,18 +180,27 @@ export class Coin {
         // this._particleSystem.addLifeTimeGradient(1, 0, 0.1);
 
         this._particleSystem.minSize = 0.1;
-        this._particleSystem.maxSize = 0.75;
+        this._particleSystem.maxSize = 0.5;
         // this._particleSystem.minScaleY = 0.2;
         // this._particleSystem.maxScaleY = 0.4;
 
-        this._particleSystem.addColorGradient(0, new Color4(1, 1, 1, 0), new Color4(1, 0, 1, 0));
-        this._particleSystem.addColorGradient(1.0, new Color4(1, 1, 1, 1), new Color4(1, 0, 1, 1));
+        this._particleSystem.addColorGradient(0, new Color4(0.2, 0.2, 0, 0), new Color4(0.8, 0.8, 0, 0));
+        this._particleSystem.addColorGradient(1.0, new Color4(0.8, 0.8, 0, 1), new Color4(1, 1, 0, 1));
+        // this._particleSystem.blendMode = ParticleSystem.BLENDMODE_ADD;
 
         this._particleSystem.emitRate = 50;
         // this._particleSystem.direction1 = new Vector3(0, -3, 3);
         // this._particleSystem.direction2 = new Vector3(7, 8, -3);
-        this._particleSystem.gravity = new Vector3(0, 0, -9.8); // larger values increase the pull
-        this._particleSystem.blendMode = ParticleSystem.BLENDMODE_ADD;
+        // this._particleSystem.gravity = new Vector3(0, 0, -9.8); // larger values increase the pull
+
+        // Angular speed, in radians
+        // this._particleSystem.minAngularSpeed = 0;
+        // this._particleSystem.maxAngularSpeed = Math.PI;
+
+        // Speed
+        // this._particleSystem.minEmitPower = 5;
+        // this._particleSystem.maxEmitPower = 10;
+        // this._particleSystem.updateSpeed = 0.005;
 
         // particles explode when coin stops moving
         const coinInPositionEvent = new AnimationEvent(
