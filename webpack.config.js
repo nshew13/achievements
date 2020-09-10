@@ -11,10 +11,11 @@ module.exports = {
         new CleanWebpackPlugin({ cleanStaleWebpackAssets: false }),
         new HtmlWebpackPlugin({
             // TODO: customize https://github.com/jantimon/html-webpack-plugin
-            title: 'Template: TypeScript + Sass + SVG (HtmlWebpackPlugin)',
-            template: './src/index.html'
+            title: 'Achievement Coin',
+            template: './src/index.html',
+//            inject: false,
         }),
-    ], 
+    ],
     output:  {
         path:     path.resolve(__dirname, 'dist'),
         filename: '[name].bundle.js'
@@ -54,7 +55,7 @@ module.exports = {
                 use: [
                   'file-loader',
                 ],
-            }, 
+            },
             // TODO: Get SVGs in the bundle
             {
                 test: /\.svg$/,
