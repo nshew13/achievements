@@ -39,8 +39,8 @@ export class Coin {
     public execute: Function;
 
     public constructor (canvasId: string, debug = false) {
-        this._initScene(canvasId);
         this._debug = debug;
+        this._initScene(canvasId);
     }
 
     private _initScene (canvasId: string) {
