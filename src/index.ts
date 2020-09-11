@@ -1,12 +1,11 @@
 import { Coin } from './coin';
 import './achievements.scss';
 
-const coin = new Coin('renderCanvas', true);
+const coin = new Coin('renderCanvas');
 coin.addCameras()
     .addLights()
-    // .addCoin()
     .latheCoin()
     .addParticles()
-    .addCoinMovement()
-    .addCoinSpin()
+    .animateMovement()
+    .animateSpin()
     .execute();

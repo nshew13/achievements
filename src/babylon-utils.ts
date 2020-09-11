@@ -39,25 +39,6 @@ export class BabylonUtils {
         // BabylonUtils._EASE_OUT_EXPO.setEasingMode(EasingFunction.EASINGMODE_EASEOUT);
     }
 
-    public static addLightSourceShape (light: Light) {
-        switch (light.constructor.name) {
-            case 'DirectionalLight':
-                // console.log('adding shape for', light.name, 'directional light source');
-                // var lightSphere = Mesh.CreateSphere('sphere', 10, 1, this._scene);
-                // lightSphere.position = light.position;
-                // lightSphere.material = new StandardMaterial('light', this._scene);
-                // lightSphere.material.emissiveColor = light.diffuse;
-                break;
-            case 'PointLight':
-                console.log('adding shape for', light.name, 'point light source');
-                var lightSphere = Mesh.CreateSphere('sphere', 10, .5, this._scene);
-                lightSphere.position = light.position;
-                lightSphere.material = new StandardMaterial('light', this._scene);
-                lightSphere.material.emissiveColor = light.diffuse;
-                break;
-        }
-    }
-
     public static deg2rad (degrees: number): number {
         return degrees * Math.PI/180;
     }
@@ -68,6 +49,32 @@ export class BabylonUtils {
             1 - color.g,
             1 - color.b
         );
+    }
+
+    public addLightSourceShape (light: Light) {
+        switch (light.constructor.name) {
+            case 'DirectionalLight':
+                // console.log('adding shape for', light.name, 'directional light source');
+                // var lightSphere = Mesh.CreateSphere('sphere', 10, 1, this._scene);
+                // lightSphere.position = light.position;
+                // lightSphere.material = new StandardMaterial('light', this._scene);
+                // lightSphere.material.emissiveColor = light.diffuse;
+                break;
+            case 'HemisphericLight':
+                console.log('adding shape for', light.name, 'hemispheric light source');
+                const lightHemisphere = Mesh.CreateHemisphere('hemisphere', 10, 0.5, this._scene);
+                lightHemisphere.position = light.getAbsolutePosition();
+                lightHemisphere.material = new StandardMaterial('light', this._scene);
+                lightHemisphere.material.emissiveColor = light.diffuse;
+                break;
+            case 'PointLight':
+                console.log('adding shape for', light.name, 'point light source');
+                const lightSphere = Mesh.CreateSphere('sphere', 10, .5, this._scene);
+                lightSphere.position = light.position;
+                lightSphere.material = new StandardMaterial('light', this._scene);
+                lightSphere.material.emissiveColor = light.diffuse;
+                break;
+        }
     }
 
     /**
