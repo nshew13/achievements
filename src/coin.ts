@@ -10,6 +10,7 @@ import {
     Engine,
     HemisphericLight,
     Light,
+    Material,
     Mesh,
     MeshBuilder,
     ParticleSystem,
@@ -20,6 +21,9 @@ import {
     Vector3,
     Vector4,
 } from '@babylonjs/core';
+import {
+    CustomMaterial,
+} from '@babylonjs/materials';
 
 import { BabylonUtils } from './babylon-utils';
 import confettiImg from './flare.png';
@@ -39,8 +43,8 @@ export class Coin {
 
     private static readonly _XYZ_START = new Vector3(0, 6, -10);
 
-    private readonly _COIN_DEPTH  = 0.05;
-    private readonly _COIN_RADIUS = 1.5;
+    private readonly _COIN_DEPTH  = 0.05; // this gets doubled
+    private readonly _COIN_RADIUS = 1.5;  // includes _EDGE_WIDTH
     private readonly _EDGE_DEPTH  = 0.15;
     private readonly _EDGE_WIDTH  = 0.25;
 
@@ -98,72 +102,115 @@ export class Coin {
     }
 
     public addLights (): Coin {
-        const light1 = new HemisphericLight('hemiLight1', new Vector3(-5, -5, 5), this._scene);
-        light1.diffuse = RGB_YELLOW;
-        light1.specular = BabylonUtils.getRGBComplement(RGBA_YELLOW); // use complementary color for white highlight
+        const frontLight = new PointLight('light1', new Vector3(-2, -5, -2), this._scene);
+        frontLight.diffuse = RGB_YELLOW;
+        frontLight.specular = BabylonUtils.getRGBComplement(RGBA_YELLOW); // use complementary color for white highlight
+
+        const backLight = frontLight.clone('light2');
+        backLight.position = new Vector3(-2, 5, -2);
 
         if (this._debug) {
-            this._utils.addLightSourceShape(light1);
+            this._utils.addLightSourceShape(frontLight);
+            this._utils.addLightSourceShape(backLight);
         }
 
         return this;
     }
 
-    // public addCoin (): Coin {
-    //     const coinFacesMat = new StandardMaterial('coinFaces', this._scene);
-    //     const tex = new Texture(coinFacesImg, this._scene);
-    //     tex.hasAlpha = true;
-    //     coinFacesMat.ambientTexture = tex;
-    //
-    //     const cylFaceUV = new Array(3);
-    //     cylFaceUV[0] = new Vector4(0, 0, .5, 1);
-    //     cylFaceUV[1] = Vector4.Zero();
-    //     cylFaceUV[2] = new Vector4(.5, 0, 1, 1);
-    //
-    //     this._coin = MeshBuilder.CreateCylinder('coin', {
-    //         height: .2,
-    //         diameter: 2,
-    //         tessellation: 48,
-    //         faceUV: cylFaceUV,
-    //         faceColors: [
-    //             RGBA_YELLOW, // bottom
-    //             RGBA_YELLOW, // tube
-    //             RGBA_YELLOW, // top
-    //         ],
-    //         // sideOrientation: Mesh.DOUBLESIDE,
-    //         // frontUVs: new Vector4(0, 0, .5, 1),
-    //         // backUVs: new Vector4(0, 0, .5, 1),
-    //     }, this._scene);
-    //     // have coin off-screen at start of render
-    //     this._coin.position = Coin._XYZ_START;
-    //     this._coin.material = coinFacesMat;
-    //
-    //     // create coin edge
-    //     // const coinEdge = MeshBuilder.CreateTube('coinEdge', {path: this._coin.}, this._scene);
-    //
-    //
-    //
-    //     return this;
-    // }
+    private _generateCoinFaceMaterial (): Material {
+        // const coinFacesMat = new CustomMaterial('coinFaces', this._scene);
+        // coinFacesMat.diffuseTexture = new Texture(coinFacesImg, this._scene);
+        // coinFacesMat.diffuseTexture.hasAlpha = true;
+        // coinFacesMat.useAlphaFromDiffuseTexture = true;
+        // coinFacesMat.Fragment_Before_FragColor(`
+        //     color = vec4(mix(vec3(1., 1., 0.), color.rgb, color.a), 1.);
+        // `);
 
-    public latheCoin (): Coin {
-        this._coin = MeshBuilder.CreateLathe('coin', {
-            shape: [
-                new Vector3(0, -0.5 * this._COIN_DEPTH, 0),
-                new Vector3(this._COIN_RADIUS - this._EDGE_WIDTH, -0.5 * this._COIN_DEPTH, 0),
-                new Vector3(this._COIN_RADIUS - this._EDGE_WIDTH, 0 - this._COIN_DEPTH - this._EDGE_DEPTH, 0),
-                new Vector3(this._COIN_RADIUS, 0 - this._COIN_DEPTH - this._EDGE_DEPTH, 0),
-                new Vector3(this._COIN_RADIUS, this._COIN_DEPTH + this._EDGE_DEPTH, 0),
-                new Vector3(this._COIN_RADIUS - this._EDGE_WIDTH, this._COIN_DEPTH + this._EDGE_DEPTH, 0),
-                new Vector3(0, this._COIN_DEPTH + this._EDGE_DEPTH, 0),
-            ],
+
+        const imageMat = new StandardMaterial('textureMat', this._scene);
+        imageMat.diffuseColor = new Color3(1, 1, 0);
+        imageMat.diffuseTexture = new Texture(coinFacesImg, this._scene);
+        imageMat.diffuseTexture.hasAlpha = true;
+        imageMat.useAlphaFromDiffuseTexture = true;
+
+        return imageMat;
+    }
+
+    public addCoin (): Coin {
+        const cylFaceUV = new Array(3);
+        cylFaceUV[0] = new Vector4(.5, 0, 1, 1);
+        cylFaceUV[1] = Vector4.Zero();
+        cylFaceUV[2] = new Vector4(0, 0, .5, 1);
+    
+        this._coin = MeshBuilder.CreateCylinder('coin', {
+            height: .2,
+            diameter: 2,
+            tessellation: 48,
+            faceUV: cylFaceUV,
         }, this._scene);
         // have coin off-screen at start of render
         this._coin.position = Coin._XYZ_START;
+        this._coin.material = this._generateCoinFaceMaterial();
+    
+        return this;
+    }
 
-        const coinFacesMat = new StandardMaterial('coinFaces', this._scene);
-        coinFacesMat.ambientColor = new Color3(1, 1, 0);
-        this._coin.material = coinFacesMat;
+    public latheCoin (): Coin {
+        const lathedCoin = MeshBuilder.CreateLathe('coin', {
+            shape: [
+                new Vector3(0,                                    0 - this._COIN_DEPTH,                    0),
+                new Vector3(this._COIN_RADIUS - this._EDGE_WIDTH, 0 - this._COIN_DEPTH,                    0),
+                new Vector3(this._COIN_RADIUS - this._EDGE_WIDTH, 0 - this._COIN_DEPTH - this._EDGE_DEPTH, 0),
+                new Vector3(this._COIN_RADIUS,                    0 - this._COIN_DEPTH - this._EDGE_DEPTH, 0),
+                new Vector3(this._COIN_RADIUS,                    this._COIN_DEPTH + this._EDGE_DEPTH,     0),
+                new Vector3(this._COIN_RADIUS - this._EDGE_WIDTH, this._COIN_DEPTH + this._EDGE_DEPTH,     0),
+                new Vector3(this._COIN_RADIUS - this._EDGE_WIDTH, this._COIN_DEPTH,                        0),
+                new Vector3(0,                                    this._COIN_DEPTH,                        0),
+            ],
+        }, this._scene);
+        lathedCoin.material = new StandardMaterial('gold', this._scene);
+        lathedCoin.material.diffuseColor = RGBA_YELLOW;
+
+        const discMat = this._generateCoinFaceMaterial();
+
+        /**
+         * Any image added to the lathe will be twisted about it's lathing
+         * axis. Instead, slip discs into position to hold the image.
+         */
+        const discFront = MeshBuilder.CreateDisc(
+            'discFront',
+            {
+                radius: this._COIN_RADIUS - this._EDGE_WIDTH,
+                sideOrientation: Mesh.DOUBLESIDE,
+                frontUVs: new Vector4(0.5, 0, 1, 1),
+                backUVs:  new Vector4(0, 0, 0.5, 1),
+            }
+        );
+        discFront.addRotation(Math.PI/2, 0, 0); // to orient with lathe
+        discFront.addRotation(0, 0, Math.PI);   // to get image upright
+        discFront.material = discMat;
+        discFront.position = new Vector3(0, 0-this._COIN_DEPTH, 0);
+
+        const discBack = discFront.clone('discBack');
+        discBack.position = new Vector3(0, this._COIN_DEPTH, 0);
+
+        // merge meshes
+        this._coin = Mesh.MergeMeshes(
+            [
+                lathedCoin,
+                discFront,
+                discBack,
+            ],
+            true,
+            true,
+            undefined,
+            false,
+            true
+        );
+
+
+        // have coin off-screen at start of render
+        this._coin.position = Coin._XYZ_START;
 
         return this;
     }
