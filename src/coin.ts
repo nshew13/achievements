@@ -243,7 +243,8 @@ export class Coin {
 
     public animateMovement (): Coin {
         // create curve for movement of coin up into view
-        const appearCurveVectors = Curve3.CreateQuadraticBezier(Coin._XYZ_START, new Vector3(0, 4, 2), Vector3.Zero(), Coin._ANIMATE_FRAMES);
+        // end above origin so camera can see full trail of particles
+        const appearCurveVectors = Curve3.CreateQuadraticBezier(Coin._XYZ_START, new Vector3(0, 4, 3.5), new Vector3(0, 4, 1.5), Coin._ANIMATE_FRAMES);
         const appearCurvePoints  = appearCurveVectors.getPoints();
 
         // show curve for debugging
