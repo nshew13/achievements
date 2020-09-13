@@ -82,7 +82,6 @@ export class Coin {
 
         this.execute = () => {
             this._scene.beginAnimation(this._coin, 0, Coin._ANIMATE_FRAMES, true, Coin._ANIMATE_SPEED);
-            // this._scene.beginAnimation(this._particleBox, 0, Coin._ANIMATE_FRAMES, true, Coin._ANIMATE_SPEED);
             this._animationGroupApproach.play();
 
             engine.runRenderLoop(() => {
@@ -263,28 +262,8 @@ export class Coin {
         animateCoin.setKeys(keys);
         animateCoin.setEasingFunction(BabylonUtils.EASE_OUT_CIRC);
 
-        // add event for end of movement
-        const coinInPositionEvent = new AnimationEvent(
-            Coin._ANIMATE_FRAMES-1,
-            () => {
-                console.log('AnimationEvent got here');
-                this._particleSystem.start();
-            },
-            true
-        );
-        const animationWithEvent = animateCoin.clone();
-        animationWithEvent.addEvent(coinInPositionEvent);
-
-        // if (Array.isArray(this._particleBox.animations)) {
-        //     this._particleBox.animations.push(animateCoin);
-        // }
-        //
-        // if (Array.isArray(this._coin.animations)) {
-        //     this._coin.animations.push(animationWithEvent);
-        // }
-
         this._animationGroupApproach = new AnimationGroup('coinApproach', this._scene);
-        this._animationGroupApproach.addTargetedAnimation(animationWithEvent, this._coin);
+        this._animationGroupApproach.addTargetedAnimation(animateCoin, this._coin);
         this._animationGroupApproach.addTargetedAnimation(animateCoin, this._particleBox);
         this._animationGroupApproach.normalize(0, Coin._ANIMATE_FRAMES);
         this._animationGroupApproach.speedRatio = Coin._ANIMATE_SPEED;
@@ -322,24 +301,22 @@ export class Coin {
 
         // create box to emit particles
         this._particleBox = Mesh.CreateBox('particleSource', 0.01, this._scene);
-        this._particleBox.position = Coin._XYZ_START;
         this._particleSystem.emitter = this._particleBox;
         this._particleSystem.isLocal = true;
 
         const SIZE_EMIT_BOX = 1.75;
-        this._particleSystem.minEmitBox = new Vector3(SIZE_EMIT_BOX, 1, 0 - SIZE_EMIT_BOX); // lower left front
-        this._particleSystem.maxEmitBox = new Vector3(0 - SIZE_EMIT_BOX, 1, SIZE_EMIT_BOX); // upper right back
+        this._particleSystem.minEmitBox = new Vector3(SIZE_EMIT_BOX, 0, -SIZE_EMIT_BOX); // lower left front
+        this._particleSystem.maxEmitBox = new Vector3(-SIZE_EMIT_BOX, 0, SIZE_EMIT_BOX); // upper right back
 
         this._particleSystem.minSize = 0.1;
         this._particleSystem.maxSize = 0.5;
 
         this._particleSystem.emitRate = 100;
-        this._particleSystem.direction1 = new Vector3(0, -1, 1);
         this._particleSystem.gravity = new Vector3(0, 0, -5); // larger values increase the pull
         this._particleSystem.addVelocityGradient(0, 5);
         this._particleSystem.addVelocityGradient(1.0, .3);
 
-        // this._particleSystem.start();
+        this._particleSystem.start();
 
         return this;
     }
