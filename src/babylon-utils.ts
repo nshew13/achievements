@@ -53,13 +53,6 @@ export class BabylonUtils {
 
     public addLightSourceShape (light: Light) {
         switch (light.constructor.name) {
-            case 'DirectionalLight':
-                // console.log('adding shape for', light.name, 'directional light source');
-                // var lightSphere = Mesh.CreateSphere('sphere', 10, 1, this._scene);
-                // lightSphere.position = light.position;
-                // lightSphere.material = new StandardMaterial('light', this._scene);
-                // lightSphere.material.emissiveColor = light.diffuse;
-                break;
             case 'HemisphericLight':
                 console.log('adding shape for', light.name, 'hemispheric light source');
                 const lightHemisphere = Mesh.CreateHemisphere('hemisphere', 10, 0.5, this._scene);
@@ -67,6 +60,13 @@ export class BabylonUtils {
                 lightHemisphere.material = new StandardMaterial('light', this._scene);
                 lightHemisphere.material.emissiveColor = light.diffuse;
                 break;
+            case 'DirectionalLight':
+                // console.log('adding shape for', light.name, 'directional light source');
+                // var lightSphere = Mesh.CreateSphere('sphere', 10, 1, this._scene);
+                // lightSphere.position = light.position;
+                // lightSphere.material = new StandardMaterial('light', this._scene);
+                // lightSphere.material.emissiveColor = light.diffuse;
+                // break;
             case 'PointLight':
                 console.log('adding shape for', light.name, 'point light source');
                 const lightSphere = Mesh.CreateSphere('sphere', 10, .5, this._scene);
@@ -148,6 +148,38 @@ export class BabylonUtils {
         this.makeTextPlane('Z', 'blue', size / 10)
             .position = new Vector3(0, 0.05 * size, 0.9 * size);
     }
+
+
+    // https://www.babylonjs-playground.com/#Z3W74Y#1
+    // function localAxes(size) {
+    //     var pilot_local_axisX = BABYLON.Mesh.CreateLines("pilot_local_axisX", [
+    //         new BABYLON.Vector3.Zero(), new BABYLON.Vector3(size, 0, 0), new BABYLON.Vector3(size * 0.95, 0.05 * size, 0),
+    //         new BABYLON.Vector3(size, 0, 0), new BABYLON.Vector3(size * 0.95, -0.05 * size, 0)
+    //     ], scene);
+    //     pilot_local_axisX.color = new BABYLON.Color3(1, 0, 0);
+
+    //     pilot_local_axisY = BABYLON.Mesh.CreateLines("pilot_local_axisY", [
+    //         new BABYLON.Vector3.Zero(), new BABYLON.Vector3(0, size, 0), new BABYLON.Vector3(-0.05 * size, size * 0.95, 0),
+    //         new BABYLON.Vector3(0, size, 0), new BABYLON.Vector3(0.05 * size, size * 0.95, 0)
+    //     ], scene);
+    //     pilot_local_axisY.color = new BABYLON.Color3(0, 1, 0);
+
+    //     var pilot_local_axisZ = BABYLON.Mesh.CreateLines("pilot_local_axisZ", [
+    //         new BABYLON.Vector3.Zero(), new BABYLON.Vector3(0, 0, size), new BABYLON.Vector3(0, -0.05 * size, size * 0.95),
+    //         new BABYLON.Vector3(0, 0, size), new BABYLON.Vector3(0, 0.05 * size, size * 0.95)
+    //     ], scene);
+    //     pilot_local_axisZ.color = new BABYLON.Color3(0, 0, 1);
+
+    //     var local_origin = BABYLON.MeshBuilder.CreateBox("local_origin", { size: 1 }, scene);
+    //     local_origin.isVisible = false;
+
+    //     pilot_local_axisX.parent = local_origin;
+    //     pilot_local_axisY.parent = local_origin;
+    //     pilot_local_axisZ.parent = local_origin;
+
+    //     return local_origin;
+
+    // }
 
     public makeTextPlane (text: string, color: string, size: float): Mesh {
         const dynamicTexture = new DynamicTexture('DynamicTexture', 50, this._scene, true);

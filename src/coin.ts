@@ -3,6 +3,7 @@ import {
     AnimationEvent,
     AnimationGroup,
     ArcRotateCamera,
+    Axis,
     Color3,
     Color4,
     Curve3,
@@ -16,6 +17,7 @@ import {
     ParticleSystem,
     PointLight,
     Scene,
+    Space,
     StandardMaterial,
     Texture,
     Vector3,
@@ -92,10 +94,10 @@ export class Coin {
     public addCameras (): Coin {
         const camera1 = new ArcRotateCamera('camera1', 1, 1, 3, Vector3.Zero(), this._scene);
         camera1.setPosition(new Vector3(0, -5, 0)); // look down from directly above
+        camera1.attachControl(this._canvas, true);
 
         if (this._debug) {
             // camera1.setPosition(new Vector3(-20, 0, 0)); // view appearCurve
-            camera1.attachControl(this._canvas, true);
         }
 
         return this;
@@ -104,14 +106,27 @@ export class Coin {
     public addLights (): Coin {
         const frontLight = new PointLight('light1', new Vector3(-2, -5, -2), this._scene);
         frontLight.diffuse = RGB_YELLOW;
-        frontLight.specular = BabylonUtils.getRGBComplement(RGBA_YELLOW); // use complementary color for white highlight
+        // frontLight.specular = BabylonUtils.getRGBComplement(RGBA_YELLOW); // use complementary color for white highlight
+        frontLight.intensity = 0.25;
 
-        const backLight = frontLight.clone('light2');
+        const backLight = frontLight.clone('light2') as PointLight;
         backLight.position = new Vector3(-2, 5, -2);
+
+        // directional light shines from the point indicated through the origin, in parallel lines from everywhere
+        // const sunLight = new DirectionalLight('sunLight', new Vector3(15, 50, 15), this._scene);
+        // sunLight.diffuse = RGB_YELLOW;
+        // sunLight.intensity = 0.5;
+        
+        // directional light shines from the point indicated through the origin, in parallel lines from everywhere
+        const sunLight = new HemisphericLight('sunLight', new Vector3(0, 0, 10), this._scene);
+        sunLight.diffuse = RGB_WHITE;
+        sunLight.groundColor = new Color3(0, 0, 0);
+        // sunLight.intensity = 0.5;
 
         if (this._debug) {
             this._utils.addLightSourceShape(frontLight);
             this._utils.addLightSourceShape(backLight);
+            this._utils.addLightSourceShape(sunLight);
         }
 
         return this;
@@ -127,11 +142,11 @@ export class Coin {
         // `);
 
 
+        const coinImgTex = new Texture(coinFacesImg, this._scene);
+
         const imageMat = new StandardMaterial('textureMat', this._scene);
-        imageMat.diffuseColor = new Color3(1, 1, 0);
-        imageMat.diffuseTexture = new Texture(coinFacesImg, this._scene);
+        imageMat.diffuseTexture = coinImgTex;
         imageMat.diffuseTexture.hasAlpha = true;
-        imageMat.useAlphaFromDiffuseTexture = true;
 
         return imageMat;
     }
@@ -168,8 +183,10 @@ export class Coin {
                 new Vector3(0,                                    this._COIN_DEPTH,                        0),
             ],
         }, this._scene);
-        lathedCoin.material = new StandardMaterial('gold', this._scene);
-        lathedCoin.material.diffuseColor = RGBA_YELLOW;
+
+        const goldMat = new StandardMaterial('gold', this._scene);
+        goldMat.diffuseColor = RGB_YELLOW;
+        lathedCoin.material = goldMat;
 
         const discMat = this._generateCoinFaceMaterial();
 
@@ -183,15 +200,25 @@ export class Coin {
                 radius: this._COIN_RADIUS - this._EDGE_WIDTH,
                 sideOrientation: Mesh.DOUBLESIDE,
                 frontUVs: new Vector4(0.5, 0, 1, 1),
-                backUVs:  new Vector4(0, 0, 0.5, 1),
+                backUVs:  Vector4.Zero(),
             }
         );
-        discFront.addRotation(Math.PI/2, 0, 0); // to orient with lathe
-        discFront.addRotation(0, 0, Math.PI);   // to get image upright
+        discFront.rotate(Axis.X, -Math.PI/2, Space.LOCAL); // to orient with lathe
         discFront.material = discMat;
         discFront.position = new Vector3(0, 0-this._COIN_DEPTH, 0);
 
-        const discBack = discFront.clone('discBack');
+        const discBack = MeshBuilder.CreateDisc(
+            'discBack',
+            {
+                radius: this._COIN_RADIUS - this._EDGE_WIDTH,
+                sideOrientation: Mesh.DOUBLESIDE,
+                // reverse faces
+                backUVs: new Vector4(0, 0, 0.5, 1),
+                frontUVs:  Vector4.Zero(),
+            }
+        );
+        discBack.rotate(Axis.X, -Math.PI/2, Space.LOCAL); // to orient with lathe
+        discBack.material = discMat;
         discBack.position = new Vector3(0, this._COIN_DEPTH, 0);
 
         // merge meshes
@@ -205,7 +232,7 @@ export class Coin {
             true,
             undefined,
             false,
-            true
+            true // need multimaterial so lathe doesn't get discMat
         );
 
 
