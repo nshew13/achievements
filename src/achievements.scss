@@ -1,12 +1,47 @@
 $size: 500px;
+$fade-duration: 2000ms;
 
 body {
     background-color: royalblue;
 }
 
+canvas#renderCanvas,
+div.achievement-title,
+div.achievement-desc {
+    width: $size;
+    position: absolute;
+    top: 5px;
+    left: 5px;
+}
+
 canvas#renderCanvas {
     height: $size;
-    width: $size;
     border: 1px dashed darkgrey;
     //box-shadow: 3px 3px darkgrey;
+}
+
+div.achievement-title,
+div.achievement-desc {
+    text-align: center;
+    vertical-align: center;
+
+    color: yellow;
+    text-shadow: 1px 1px 5px black;
+}
+
+div.achievement-title {
+    font-size: 24pt;
+}
+
+div.achievement-desc {
+    top: $size * 0.65;
+    font-size: 16pt;
+}
+
+.fade {
+    animation: fadeIn ease-out $fade-duration;
+}
+@keyframes fadeIn {
+    0%   { opacity: 0; }
+    100% { opacity: 1; }
 }

@@ -1,13 +1,6 @@
-import { Coin } from './coin';
+import { Achievements } from './achievements';
 import './achievements.scss';
 
-const coin = new Coin('renderCanvas');
-// const coin = new Coin('renderCanvas', true);
-coin.addCameras()
-    .addLights()
-    // .addCoin()
-    .latheCoin()
-    .addParticles()
-    .animateMovement()
-    .animateSpin()
-    .execute();
+document.addEventListener('DOMContentLoaded', (event) => {
+    new Achievements();
+});

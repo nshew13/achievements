@@ -7,10 +7,8 @@ import {
     Color3,
     Color4,
     Curve3,
-    DirectionalLight,
     Engine,
     HemisphericLight,
-    Light,
     Material,
     Mesh,
     MeshBuilder,
@@ -23,20 +21,13 @@ import {
     Vector3,
     Vector4,
 } from '@babylonjs/core';
-import {
-    CustomMaterial,
-} from '@babylonjs/materials';
 
 import { BabylonUtils } from './babylon-utils';
-import confettiImg from './flare.png';
+import sparkImg from './flare.png';
 import coinFacesImg from './coin.png';
 
-const RGBA_YELLOW = new Color4(1, 1, 0, 1);
-const RGBA_GREEN  = new Color4(0, 1, 0, 1);
 const RGB_WHITE   = new Color3(1, 1, 1);
-const RGB_RED     = new Color3(1, 0, 0);
 const RGB_YELLOW  = new Color3(1, 1, 0);
-const RGB_BLUE    = new Color3(0, 0, 1);
 
 export class Coin {
     private static readonly _ANIMATE_DURATION = 1.5; // seconds
@@ -51,7 +42,7 @@ export class Coin {
     private readonly _EDGE_WIDTH  = 0.25;
 
     private _animationGroupApproach: AnimationGroup;
-    private _canvas: HTMLCanvasElement;
+    private _canvasEl: HTMLCanvasElement;
     private _coin: Mesh;
     private _debug: boolean;
     private _particleBox: Mesh; // size of a particle: Particle Box
@@ -59,16 +50,22 @@ export class Coin {
     private _scene: Scene;
     private _utils: BabylonUtils;
 
+    public static readonly EVENT_ANIMATION_IN_POSITION = 'animate-in-position';
+    private _evtCoinInPosition: Event;
+
     public execute: Function;
 
     public constructor (canvasId: string, debug = false) {
         this._debug = debug;
+
+        this._evtCoinInPosition = new Event(Coin.EVENT_ANIMATION_IN_POSITION)
+
         this._initScene(canvasId);
     }
 
     private _initScene (canvasId: string) {
-        this._canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
-        const engine = new Engine(this._canvas);
+        this._canvasEl = document.getElementById('renderCanvas') as HTMLCanvasElement;
+        const engine = new Engine(this._canvasEl);
         this._scene  = new Scene(engine);
         // particles don't show on white/transparent bg, but do show on black/transparent (weird)
         this._scene.clearColor = new Color4(0, 0, 0, 0);
@@ -77,7 +74,7 @@ export class Coin {
             this._utils = new BabylonUtils(this._scene);
             this._utils.addWorldAxes(2);
 
-            this._canvas.focus();
+            this._canvasEl.focus();
         }
 
         this.execute = () => {
@@ -93,7 +90,7 @@ export class Coin {
     public addCameras (): Coin {
         const camera1 = new ArcRotateCamera('camera1', 1, 1, 3, Vector3.Zero(), this._scene);
         camera1.setPosition(new Vector3(0, -5, 0)); // look down from directly above
-        camera1.attachControl(this._canvas, true);
+        camera1.attachControl(this._canvasEl, true);
 
         if (this._debug) {
             // camera1.setPosition(new Vector3(-20, 0, 0)); // view appearCurve
@@ -115,7 +112,7 @@ export class Coin {
         // const sunLight = new DirectionalLight('sunLight', new Vector3(15, 50, 15), this._scene);
         // sunLight.diffuse = RGB_YELLOW;
         // sunLight.intensity = 0.5;
-        
+
         // directional light shines from the point indicated through the origin, in parallel lines from everywhere
         const sunLight = new HemisphericLight('sunLight', new Vector3(0, 0, 10), this._scene);
         sunLight.diffuse = RGB_WHITE;
@@ -155,7 +152,7 @@ export class Coin {
         cylFaceUV[0] = new Vector4(.5, 0, 1, 1);
         cylFaceUV[1] = Vector4.Zero();
         cylFaceUV[2] = new Vector4(0, 0, .5, 1);
-    
+
         this._coin = MeshBuilder.CreateCylinder('coin', {
             height: .2,
             diameter: 2,
@@ -165,7 +162,7 @@ export class Coin {
         // have coin off-screen at start of render
         this._coin.position = Coin._XYZ_START;
         this._coin.material = this._generateCoinFaceMaterial();
-    
+
         return this;
     }
 
@@ -263,8 +260,21 @@ export class Coin {
         animateCoin.setKeys(keys);
         animateCoin.setEasingFunction(BabylonUtils.EASE_OUT_CIRC);
 
+        // add event for end of movement
+        const coinInPositionEvent = new AnimationEvent(
+            Coin._ANIMATE_FRAMES-1,
+            () => {
+                document.dispatchEvent(this._evtCoinInPosition);
+            },
+            true
+        );
+
+        // we want the animation to fire only once, so attach it only to one mesh
+        const animationWithEvent = animateCoin.clone();
+        animationWithEvent.addEvent(coinInPositionEvent);
+
         this._animationGroupApproach = new AnimationGroup('coinApproach', this._scene);
-        this._animationGroupApproach.addTargetedAnimation(animateCoin, this._coin);
+        this._animationGroupApproach.addTargetedAnimation(animationWithEvent, this._coin);
         this._animationGroupApproach.addTargetedAnimation(animateCoin, this._particleBox);
         this._animationGroupApproach.normalize(0, Coin._ANIMATE_FRAMES);
         this._animationGroupApproach.speedRatio = Coin._ANIMATE_SPEED;
@@ -298,7 +308,7 @@ export class Coin {
     public addParticles (): Coin {
         // create spark particles
         this._particleSystem = new ParticleSystem('sparkticles', 2000, this._scene);
-        this._particleSystem.particleTexture = new Texture(confettiImg, this._scene);
+        this._particleSystem.particleTexture = new Texture(sparkImg, this._scene);
 
         // create box to emit particles
         this._particleBox = Mesh.CreateBox('particleSource', 0.01, this._scene);
