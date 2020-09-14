@@ -90,6 +90,9 @@ export class Coin {
     public addCameras (): Coin {
         const camera1 = new ArcRotateCamera('camera1', 1, 1, 3, Vector3.Zero(), this._scene);
         camera1.setPosition(new Vector3(0, -5, 0)); // look down from directly above
+        camera1.panningSensibility = 0.15;
+        camera1.panningInertia = 0;
+        camera1.panningAxis = new Vector3(0, 5, 5);
         camera1.attachControl(this._canvasEl, true);
 
         if (this._debug) {
