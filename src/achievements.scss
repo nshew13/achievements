@@ -5,6 +5,7 @@ body {
     background-color: royalblue;
 }
 
+div#achievementWrapper,
 canvas#renderCanvas,
 div.achievement-title,
 div.achievement-desc {
@@ -14,9 +15,17 @@ div.achievement-desc {
     left: 5px;
 }
 
+div#achievementWrapper {
+    position: relative;
+}
+
+div#achievementWrapper,
 canvas#renderCanvas {
     height: $size;
-    border: 1px dashed darkgrey;
+}
+
+canvas#renderCanvas {
+    //border: 1px dashed darkgrey;
     //box-shadow: 3px 3px darkgrey;
 }
 

@@ -25,7 +25,8 @@ export class Achievements {
         descEl.appendChild(document.createTextNode('You unlocked the Crowning Achievement.'));
         descEl.className = 'achievement-desc fade';
 
-        document.body.append(titleEl);
-        setTimeout(() => document.body.append(descEl), 500);
+        const wrapperEl = document.getElementById('achievementWrapper');
+        wrapperEl.append(titleEl);
+        setTimeout(() => wrapperEl.append(descEl), 500);
     }
 }
